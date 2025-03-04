@@ -15,13 +15,13 @@ class EventController extends Controller
 
     private array $relations = ['user', 'attendees', 'attendees.user'];
 
-    public function __construct()
-    {
-        $this->middleware('auth:sanctum')->except(['index', 'show']);
-        //60 request in 1 min
-        $this->middleware('throttle:api')->only(['store', 'destroy', 'update']);
-        $this->authorizeResource(Event::class, 'event');
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware('auth:sanctum')->except(['index', 'show']);
+    //     //60 request in 1 min
+    //     $this->middleware('throttle:api')->only(['store', 'destroy', 'update']);
+    //     $this->authorizeResource(Event::class, 'event');
+    // }
 
     protected function getRelations(): array
     {
@@ -32,6 +32,7 @@ class EventController extends Controller
      */
     public function index()
     {
+        Gate::authorize('viewAny', Event::class);
         $query = $this->loadRelationships(Event::query());
 
         return EventResource::collection(
@@ -44,6 +45,7 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', Event::class);
         $event = Event::create([
             //... Laravel automatically unpacks the validated data into key-value pairs.
             ...$request->validate([
@@ -63,6 +65,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
+        Gate::authorize('view', $event);
         return new EventResource($this->loadRelationships($event));
     }
 
@@ -76,7 +79,7 @@ class EventController extends Controller
         // }
 
         // $this->authorize('update-event', $event);
-
+        Gate::authorize('update', $event);
         $event->update(
             $request->validate([
                 'name' => 'sometimes|string|max:255',
@@ -94,6 +97,7 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
+        Gate::authorize('delete', $event);
         $event->delete();
 
         return response(status: 204);
